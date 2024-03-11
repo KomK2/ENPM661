@@ -3,6 +3,7 @@
 
  > use the following coordinates for inital and final coordinates:
  inital :(6,6), goal :(1173, 473)
+ provide the coordinates with x>5 and x<1195 and y >5 and y< 495
 
  > install the following packages : numpy, math, matplotlib, cv2, queue
 
