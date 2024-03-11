@@ -9,11 +9,11 @@ import math
 y = 500
 canvas = np.ones((500, 1200, 3), dtype=np.uint8 )
 new_color = (255, 0, 0)
-# output_file = 'path_video.avi'
-# fourcc = cv2.VideoWriter_fourcc(*'XVID')
-# fps = 1000
-# width, height = 1200,500
-# video_writer = cv2.VideoWriter(output_file, fourcc, fps, (width, height))
+output_file = 'path_video.avi'
+fourcc = cv2.VideoWriter_fourcc(*'XVID')
+fps = 1000
+width, height = 1200,500
+video_writer = cv2.VideoWriter(output_file, fourcc, fps, (width, height))
 
 def hexagon_vertex() :
     hexagon_vertex = []
@@ -197,7 +197,7 @@ def backTracking(node):
     for i in range(1, len(path)):
         # canvas[path[i][1], path[i][0]] = (0, 255, 0)
         cv2.line(canvas, path[i-1], path[i], (0, 255, 0), 2)
-        # video_writer.write(canvas)
+        video_writer.write(canvas)
 
 
 
@@ -239,7 +239,7 @@ def dijkstra(start, goal):
                 
                 if my_dict.get(newPoints) is None:
                     canvas[newPoints[1], newPoints[0]] = new_color
-                    # video_writer.write(canvas)
+                    video_writer.write(canvas)
                     my_dict[newPoints] = possible_next_node
                     open_list.put((possible_next_node.getCost(), possible_next_node))
 
@@ -248,7 +248,7 @@ def dijkstra(start, goal):
                         my_dict[newPoints] = possible_next_node
                         open_list.put((possible_next_node.getCost(), possible_next_node))
                         canvas[newPoints[1], newPoints[0]] = new_color
-                        # video_writer.write(canvas)
+                        video_writer.write(canvas)
 
 
 if __name__ == "__main__":
