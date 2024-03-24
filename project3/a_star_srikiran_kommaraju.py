@@ -59,40 +59,43 @@ def can_move(point):
     return False
 
 
-def move_30_left(node, stepsize = 1):
+def move_30_left(node, stepsize):
     current_point = node.getPoints()
     new_points = (round(current_point[0]+ (np.cos(-np.pi/6) *stepsize)),round( current_point[1]+ (np.sin( -np.pi/6) *stepsize)))
     if can_move(new_points):
-        return True, new_points, node.orientation -30, heuristic(new_points)
+        return True, new_points,  -30, heuristic(new_points)
     return False , current_point, node.orientation, node.heuristic
     
 
-def move_60_left(node, stepsize = 1):
+def move_60_left(node, stepsize):
     current_point = node.getPoints()
     new_points = (round(current_point[0]+ (np.cos(-np.pi/3) *stepsize)) , round(current_point[1]+ (np.sin(-np.pi/3) *stepsize)))
     if can_move(new_points):
-        return True, new_points,node.orientation -60, heuristic(new_points)
+        
+        return True, new_points, -60, heuristic(new_points)
     return False , current_point, node.orientation, node.heuristic
 
-def move_straight(node, stepsize = 1):
+def move_straight(node, stepsize):
     current_point = node.getPoints()
     new_points = (round(current_point[0]+ (np.cos(0) *stepsize)) , round(current_point[1]+ (np.sin(0) *stepsize)))
     if can_move(new_points):
-        return True, new_points,node.orientation , heuristic(new_points)
+        
+        return True, new_points,0, heuristic(new_points)
     return False , current_point, node.orientation, node.heuristic
 
-def move_30_right(node, stepsize = 1):
+def move_30_right(node, stepsize):
     current_point = node.getPoints()
     new_points = (round(current_point[0]+ (np.cos(np.pi/6) *stepsize) ), round(current_point[1]+ (np.sin(np.pi/6) *stepsize)))
     if can_move(new_points):
-        return True, new_points,node.orientation +30 , heuristic(new_points)
+        
+        return True, new_points,30 , heuristic(new_points)
     return False , current_point, node.orientation, node.heuristic
 
-def move_60_right(node, stepsize = 1):
+def move_60_right(node, stepsize):
     current_point = node.getPoints()
     new_points = (round(current_point[0]+ (np.cos(np.pi/3) *stepsize) ), round(current_point[1]+ (np.sin(np.pi/3) *stepsize)))
     if can_move(new_points):
-        return True, new_points,node.orientation +60, heuristic(new_points)
+        return True, new_points,60, heuristic(new_points)
     return False , current_point, node.orientation, node.heuristic
 
 def in_goal_thershold(point, thershold):
@@ -102,6 +105,69 @@ def in_goal_thershold(point, thershold):
     distance = math.sqrt((x - circle_center_x) ** 2 + (y - circle_center_y) ** 2)
     return distance <= radius
 
+def backtrancking (node):
+    while True:
+        if node.parent is None:
+            # plt.imshow(canvas)
+            # plt.show()
+            break
+        canvas[node.y, node.x] = (255, 255, 0)
+        node = node.parent
+
+def new_algo():
+    open_list = PriorityQueue()
+    visted_list = dict()
+
+    # adding first node to open list and closed list
+    first_node = Node(x= start_point[0],y= start_point[1],orientation= start_point[2], cost=0, heuristic =  heuristic(start_point), parent=None )
+    open_list.put((first_node.total_cost ,first_node))
+    visted_list[(start_point[0],start_point[1])] = first_node
+
+    while True:
+        current = open_list.get()
+        print(f"node:({current[1].x},{current[1].y}) h:{current[0 ]}")
+        current_node =  current[1]
+        
+        current_node_location = (current_node.x,current_node.y)
+
+        if in_goal_thershold(current_node_location, 100):
+            backtrancking(current_node)
+            plt.imshow(canvas)
+            plt.show()
+            print("goal reached")
+            return 
+        
+        temp = visted_list.get(current_node_location)
+        if temp is not None:
+            if temp.heuristic < current_node.heuristic:
+                continue
+        
+        
+        actions = [move_30_left, move_60_left, move_straight, move_30_right, move_60_right]
+
+
+        for action in actions:
+            step_size =1
+            canMove, newPoints,newOrientation, newHeuristic = action(current_node, stepsize = step_size)
+
+            if canMove :
+                possible_next_node = Node(x=  newPoints[0],y=newPoints[1],orientation = current_node.orientation+newOrientation,cost= current_node.cost + step_size, parent= current_node,heuristic= heuristic(newPoints))
+
+                # exploring new_node
+                if visted_list.get(newPoints) is None:
+                    open_list.put((possible_next_node.total_cost, possible_next_node))
+                    visted_list[newPoints]  = possible_next_node
+                    canvas[newPoints[1], newPoints[0]] = new_color
+
+                # checking if the visted node could have less cost
+                else:
+                    if possible_next_node.total_cost < visted_list.get(newPoints).total_cost :
+                        visted_list[newPoints] = possible_next_node
+                        open_list.put((possible_next_node.total_cost, possible_next_node))
+                        canvas[newPoints[1], newPoints[0]] = new_color
+                    else:
+                        continue
+        
 
 
 def a_star_implementation():
@@ -114,22 +180,30 @@ def a_star_implementation():
     visted_list[start_point] = first_node
 
     while True :
-        current_node =  open_list.get()[1]
+        current = open_list.get()
+        print(f"node:({current[1].x},{current[1].y}) h:{current[0]}")
+        current_node =  current[1]
+        
         current_node_location = (current_node.x,current_node.y)
-        print(f"points are {current_node_location} and orientation : {current_node.orientation}",)
-        if in_goal_thershold(current_node_location, 1):
-            print("goal reached")
+        if in_goal_thershold(current_node_location, 10):
+            backtrancking(current_node)
             plt.imshow(canvas)
             plt.show()
+            #print("goal reached")
             return 
         
+        temp = visted_list.get(current_node_location)
+        if temp is not None:
+            if temp.heuristic < current_node.heuristic:
+                continue
         
         actions = [move_30_left, move_60_left, move_straight, move_30_right, move_60_right]
+        
         for action in actions:
             canMove, newPoints,newOrientation, newHeuristic = action(current_node, stepsize= 2)
 
             if canMove:
-                possibile_next_node = Node(newPoints[0],newPoints[1],newOrientation ,1 ,newHeuristic, parent= current_node)
+                possibile_next_node = Node(newPoints[0],newPoints[1],newOrientation ,2 ,newHeuristic, parent= current_node)
 
                 if visted_list.get(newPoints) :
                     if newHeuristic < visted_list[newPoints].heuristic :
@@ -147,7 +221,8 @@ if __name__ == "__main__":
 
     x_goal, y_goal, goal_orientation = map(int, input("Enter goal x, goal y, and goal orientation separated by spaces: ").split())
     goal = (x_goal, y_goal, goal_orientation)
-    a_star_implementation()
-
+    
+    # a_star_implementation()
+    new_algo()
 
     # show_image()

@@ -1,13 +1,13 @@
 class Node:
-    def __init__(self, x, y,orientation, cost=None, heuristic = None ,parent=None ):
+    def __init__(self, x, y,orientation, cost, heuristic  ,parent ):
         self.x = x
         self.y = y
+        self.orientation = orientation
         self.cost = cost
         self.parent = parent
         self.heuristic = heuristic
-        self.orientation = orientation
-        self.total_cost = None
-        self.updateCost()
+        self.total_cost = self.updateCost()
+        # self.updateCost()
         
     
     def addCost(self, cost):
@@ -27,8 +27,9 @@ class Node:
 
     def updateCost(self):
         total_cost = self.cost + self.heuristic
-        if self.total_cost is None or total_cost < self.total_cost:
-            self.total_cost = total_cost
+        return total_cost
+        # if self.total_cost is None or total_cost < self.total_cost:
+        #     self.total_cost = total_cost
     
     
     
