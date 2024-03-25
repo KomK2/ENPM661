@@ -2,6 +2,8 @@ ENPM 661 - Project 3 - A* Algorithm
 Kiran Kommaraju - komkiran - 120408366
 Abhinav Bhamidipati - abhinavb7 - 120424731
 
+Github Link : https://github.com/KomK2/ENPM661/tree/project3
+
 You need the following libraries to run the code
 numpy, cv2, math, queue, matplotlib.pyplot, matplotlib.path
 
