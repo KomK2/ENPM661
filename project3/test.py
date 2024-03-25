@@ -42,6 +42,13 @@ new_color = (255, 0, 0)
 clearance = 0
 stepSize = 0
 
+output_file = 'path_video.avi'
+fourcc = cv2.VideoWriter_fourcc(*'XVID')
+fps = 1000
+width, height = 1200,500
+video_writer = cv2.VideoWriter(output_file, fourcc, fps, (width, height))
+
+
 def initalize_varaibles():
     global clearance
     global stepSize
@@ -64,19 +71,15 @@ hexagon_points = np.array(hexagon_vertex())
 u_shape = np.array([[1200-100-200,y-(450)],[1200-100,y-450],[1200-100,y-50],[1200-100-200,y-(50)],[1200-100-200,y-75-50],[1200-100-200+120,y-75-50],[1200-100-200+120,y-(375)],[1200-100-200,y-375] ])
 
 cv2.polylines(canvas, [hexagon_points], True, (255, 0, 255), 5)
-cv2.polylines(canvas, [hexagon_points], True, (255, 0, 255), clearance)
 cv2.fillPoly(canvas, [hexagon_points], (0, 0, 255))
 
 cv2.rectangle(canvas, (100, y-500), (175, y-100), (255, 0, 255), 5 )
-cv2.rectangle(canvas, (100, y-500), (175, y-100), (0, 0, 255), clearance )
 cv2.rectangle(canvas, (100, y-500), (175, y-100), (0, 0, 255), -1)
 
 cv2.rectangle(canvas, (100+75+100, y-400), (100+75+100+75, y), (255, 0, 255), 5)
-cv2.rectangle(canvas, (100+75+100, y-400), (100+75+100+75, y), (0, 0, 255), clearance)
 cv2.rectangle(canvas, (100+75+100, y-400), (100+75+100+75, y), (0, 0, 255), -1)
 
 cv2.polylines(canvas, [u_shape], True, (255, 0, 255), 5)
-cv2.polylines(canvas, [u_shape], True, (255, 0, 255), clearance)
 cv2.fillPoly(canvas, [u_shape],(0, 0, 255))
 
 
@@ -135,8 +138,11 @@ def moveStraight(node,step_size):
     current = node.getPoints()
     orientation = node.getOrientation()
 
-    new_x = current[0] + int(round((math.cos(math.radians(orientation))*step_size )))
+    new_x = current[0] + int(round((math.cos(math.radians(orientation))*step_size)))
     new_y = current[1] + int(round((math.sin(math.radians(orientation))*step_size)))
+
+    clearance_x =  int(round((math.cos(math.radians(orientation))*clearance)))
+    clearance_y = int(round((math.sin(math.radians(orientation))*clearance_x)))
 
     newPoints = (new_x, new_y)
     if not canMove(newPoints):
@@ -227,20 +233,7 @@ def a_star(initial, final, inital_orentation, goal_orentation ):
                 canvas[current_node.getPoints()[1], current_node.getPoints()[0]] = (255, 255, 0)
                 current_node = current_node.getParent()
 
-                # for i in range(len(path) - 1):
-                #     start_node = path[i]
-                #     end_node = path[i + 1]
-
-                #     # Extracting (x, y) coordinates
-                #     start_x, start_y = start_node[0], start_node[1]
-                #     end_x, end_y = end_node[0], end_node[1]
-
-                #     # Calculating vector components
-                #     vector_x = end_x - start_x
-                #     vector_y = end_y - start_y
-
-                #     # Plotting the vector
-                #     plt.quiver(start_x, start_y, vector_x, vector_y, angles='xy', scale_units='xy', scale=1, color='r')
+                
             return path[::-1]
 
         for move in [moveStraight, move_left_30, move_left_60, move_right_30, move_right_60]:
@@ -253,18 +246,31 @@ def a_star(initial, final, inital_orentation, goal_orentation ):
                         visited[new_point] = new_node
                         closed_list.add(new_point)
                         
-                        canvas[new_point[1], new_point[0]] = new_color
+                        # canvas[new_point[1], new_point[0]] = new_color
+                        draw_exploration(new_node)
+                        video_writer.write(canvas)
                     else:
                         if visited[new_point].total_cost > new_node.total_cost:
                             visited[new_point] = new_node
                             open_list.put((new_node.total_cost, new_node))
 
-    
-    
+def draw_arrow(path):
+                    
+    for i in range(len(path) - 1):
+        start_node = path[i]
+        end_node = path[i + 1]
+        cv2.arrowedLine(canvas, start_node, end_node, (255, 255, 0), 1 , tipLength= 0.5)
+        video_writer.write(canvas)
+
+def draw_exploration(explored_node):
+    if explored_node.getParent() is not None:
+        cv2.arrowedLine(canvas, explored_node.getPoints(), explored_node.getParent().getPoints() , new_color, 1 , tipLength= 0.5)
 
 
 if __name__ == "__main__":
     intial, final, inital_orentation, goal_orentation = start_end_goals()
     initalize_varaibles()
-    a_star(intial, final,inital_orentation, goal_orentation)
+    shortest_path = a_star(intial, final,inital_orentation, goal_orentation)
+    draw_arrow(shortest_path)
+    video_writer.release()
     show_image()
