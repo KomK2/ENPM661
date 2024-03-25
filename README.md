@@ -1,14 +1,21 @@
-# #ENPM661
- > When providing start and goal values for pathfinding or navigation tasks, ensure that these coordinates are within the defined boundary of the search area and are not located within any defined obstacles. This is crucial for the algorithm to work correctly and to find a valid path from the start to the goal.
+ENPM 661 - Project 3 - A* Algorithm 
+Kiran Kommaraju - komkiran - 120408366
+Abhinav Bhamidipati - abhinavb7 - 120424731
 
- > use the following coordinates for inital and final coordinates:
- inital :(6,6), goal :(1173, 473)
- provide the coordinates with x>5 and x<1195 and y >5 and y< 495
+Github Link : https://github.com/KomK2/ENPM661/tree/project3
 
- > install the following packages : numpy, math, matplotlib, cv2, queue
+You need the following libraries to run the code
+numpy, cv2, math, queue, matplotlib.pyplot, matplotlib.path
 
- >link to the git repo:  https://github.com/KomK2/ENPM661.git
+Steps to Run the code:
+1. Run the given a_star_kiran_abhinav.py file.
+2. Enter the x coordinates, y coordinates and orientations of the start and goal node one by one.
+3. The orientations should be multiple of 30 degrees.
+4. Enter the clearance of the robot.
+5. Enter the stepsize of the robot ( 1 - 10 ).
+6. You will get the output of optimal path on the map.
+7. The video will get saved in the background with Node exploration and Optimal path.
 
- >link to visulalization: https://drive.google.com/file/d/1H32bzYNWd2ZJjiJbLNefotuE4GMFBL36/view?usp=sharing
+The uploaded video has the start node as (440,200,60) and goal node as (1173,473,30). Taken Clearance is 5mm, and Step size as 7.
 
-
+Note : Both files in project3 naming a_star_kiran_abhinav.py and proj3_abhinav_kiran.py are the same files, just changed the name to match the naming convention.
