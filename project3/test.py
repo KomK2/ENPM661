@@ -141,11 +141,12 @@ def moveStraight(node,step_size):
     new_x = current[0] + int(round((math.cos(math.radians(orientation))*step_size)))
     new_y = current[1] + int(round((math.sin(math.radians(orientation))*step_size)))
 
-    clearance_x =  int(round((math.cos(math.radians(orientation))*clearance)))
-    clearance_y = int(round((math.sin(math.radians(orientation))*clearance_x)))
+    clearance_x =  current[0] + int(round((math.cos(math.radians(orientation))*clearance)))
+    clearance_y = current[1] + int(round((math.sin(math.radians(orientation))*clearance)))
 
     newPoints = (new_x, new_y)
-    if not canMove(newPoints):
+    clearance_cord = (clearance_x, clearance_y)
+    if not canMove(newPoints) or not canMove(clearance_cord):
         return False , None ,None , step_size
     return True, newPoints, orientation, step_size    
 
@@ -156,8 +157,12 @@ def move_left_30(node,step_size):
     new_x = current[0] + int(round((math.cos(math.radians(orientation-30))*step_size )))
     new_y = current[1] + int(round((math.sin(math.radians(orientation-30))*step_size)))
 
+    clearance_x =  current[0] + int(round((math.cos(math.radians(orientation -30 ))*clearance)))
+    clearance_y = current[1] + int(round((math.sin(math.radians(orientation -30))*clearance)))
+
     newPoints = (new_x, new_y)
-    if not canMove(newPoints):
+    clearance_cord = (clearance_x, clearance_y)
+    if not canMove(newPoints) or not canMove(clearance_cord):
         return False , None ,None , step_size
     return True, newPoints, orientation-30, step_size
 
@@ -167,9 +172,13 @@ def move_left_60(node,step_size):
 
     new_x = current[0] + int(round((math.cos(math.radians(orientation-60))*step_size )))
     new_y = current[1] + int(round((math.sin(math.radians(orientation-60))*step_size)))
+    
+    clearance_x =  current[0] + int(round((math.cos(math.radians(orientation -60))*clearance)))
+    clearance_y = current[1] + int(round((math.sin(math.radians(orientation -60 ))*clearance)))
 
     newPoints = (new_x, new_y)
-    if not canMove(newPoints):
+    clearance_cord = (clearance_x, clearance_y)
+    if not canMove(newPoints) or not canMove(clearance_cord):
         return False , None ,None , step_size
     return True, newPoints, orientation-60, step_size
 
@@ -179,9 +188,13 @@ def move_right_30(node,step_size):
 
     new_x = current[0] + int(round((math.cos(math.radians(orientation+30))*step_size )))
     new_y = current[1] + int(round((math.sin(math.radians(orientation+30))*step_size)))
+    
+    clearance_x =  current[0] + int(round((math.cos(math.radians(orientation +30))*clearance)))
+    clearance_y = current[1] + int(round((math.sin(math.radians(orientation +30 ))*clearance)))
 
     newPoints = (new_x, new_y)
-    if not canMove(newPoints):
+    clearance_cord = (clearance_x, clearance_y)
+    if not canMove(newPoints) or not canMove(clearance_cord):
         return False , None ,None , step_size
     return True, newPoints, orientation+30, step_size
 
@@ -191,9 +204,13 @@ def move_right_60(node,step_size):
 
     new_x = current[0] + int(round((math.cos(math.radians(orientation+60))*step_size )))
     new_y = current[1] + int(round((math.sin(math.radians(orientation+60))*step_size)))
+    
+    clearance_x =  current[0] + int(round((math.cos(math.radians(orientation +60 ))*clearance)))
+    clearance_y = current[1] + int(round((math.sin(math.radians(orientation +60))*clearance)))
 
     newPoints = (new_x, new_y)
-    if not canMove(newPoints):
+    clearance_cord = (clearance_x, clearance_y)
+    if not canMove(newPoints) or not canMove(clearance_cord):
         return False , None ,None , step_size
     return True, newPoints, orientation+60, step_size
 
@@ -264,7 +281,9 @@ def draw_arrow(path):
 
 def draw_exploration(explored_node):
     if explored_node.getParent() is not None:
-        cv2.arrowedLine(canvas, explored_node.getPoints(), explored_node.getParent().getPoints() , new_color, 1 , tipLength= 0.5)
+        cv2.line(canvas, explored_node.getPoints(), explored_node.getParent().getPoints() , new_color, thickness=1, lineType=cv2.LINE_8, shift=0)
+
+        # cv2.arrowedLine(canvas, explored_node.getPoints(), explored_node.getParent().getPoints() , new_color, 1 , tipLength= 0.5)
 
 
 if __name__ == "__main__":
