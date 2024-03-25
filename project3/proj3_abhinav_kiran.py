@@ -12,6 +12,7 @@ import matplotlib.path as mplPath
 import cv2
 from queue import PriorityQueue
 import math
+import time
 
 # Node class
 class Node :
@@ -108,6 +109,7 @@ cv2.fillPoly(canvas, [u_shape],(0, 0, 255))
 # display the canvas
 def show_image():
     plt.imshow( canvas)
+    plt.gca().invert_yaxis()
     plt.show()
 
 # check if point is inside the rectangle
@@ -148,10 +150,10 @@ def canMove(point):
 
 # Start and End points from the user
 def start_end_goals():
-    initial_point = int(input("Enter the x coordinate of the initial point: ")), int(input("Enter the y coordinate of the initial point: "))
+    initial_point = int(input("Enter the x coordinate of the initial point: ")), y - int(input("Enter the y coordinate of the initial point: "))
     inital_orentation = int(input("Enter the orientation of robot at initial point ( multiple of 30 ): "))
 
-    goal_point = int(input("Enter the x coordinate of the goal point: ")), int(input("Enter the y coordinate of the goal point: "))
+    goal_point = int(input("Enter the x coordinate of the goal point: ")), y - int(input("Enter the y coordinate of the goal point: "))
     goal_orentation = int(input("Enter the orientation of robot at goal point ( multiple of 30 ): "))
 
     if canMove(initial_point) and canMove(goal_point):
@@ -309,6 +311,7 @@ def a_star(initial, final, inital_orentation, goal_orentation ):
                             visited[new_point] = new_node
                             open_list.put((new_node.total_cost, new_node))
 
+
 # Draw the path as arrows 
 def draw_arrow(path):
                     
@@ -327,9 +330,16 @@ def draw_exploration(explored_node):
 
 # Main function
 if __name__ == "__main__":
+    start_time = time.time()
+    
     intial, final, inital_orentation, goal_orentation = start_end_goals()
     initalize_varaibles()
     shortest_path = a_star(intial, final,inital_orentation, goal_orentation)
+    
+    end_time = time.time()  
+    time_taken = end_time - start_time
+    
+    print("Time Taken : ", time_taken, "seconds")
     
     # Visualize start and goal nodes
     cv2.circle(canvas, (intial[0], intial[1]), 5, (0, 255, 0), -1)  # Start node in white
