@@ -58,6 +58,16 @@ new_color = (255, 0, 0)
 clearance = 0
 stepSize = 0
 
+left_rpm =0
+right_rpm = 0
+
+# robot_radius = 38  
+robot_wheel_radius = 30
+wheel_distance = 354  
+dt = 0.1
+t = 0
+
+
 # Video writer to save the output
 # output_file = 'path_video.avi'
 # fourcc = cv2.VideoWriter_fourcc(*'XVID')
@@ -69,10 +79,20 @@ stepSize = 0
 def initalize_varaibles():
     global clearance
     global stepSize
+    global right_rpm
+    global left_rpm
+
     
     # Input from the user
     clearance = int (input("Enter the clearance in mm: "))
     stepSize = int (input("Enter the step size between 1 and 10 : "))
+
+    right_rpm = int (input("enter right wheel rpm: "))
+    left_rpm = int(input("enter left wheel rpm"))
+
+    
+
+
 
 # Calculating vertices of the hexagon
 def hexagon_vertex() :
@@ -147,101 +167,115 @@ def start_end_goals():
     goal_point = int(input("Enter the x coordinate of the goal point: ")), int(input("Enter the y coordinate of the goal point: "))
     goal_orentation = int(input("Enter the orientation of robot at goal point ( multiple of 30 ): "))
 
+
+
     if canMove(initial_point) and canMove(goal_point):
         return initial_point, goal_point , inital_orentation, goal_orentation
     else:
         print("Invalid points. Please enter valid points.")
         return start_end_goals()
-
-# Function to move Straight
-def moveStraight(node,step_size):
-    current = node.getPoints()
-    orientation = node.getOrientation()
-
-    new_x = current[0] + int(round((math.cos(math.radians(orientation))*step_size)))
-    new_y = current[1] + int(round((math.sin(math.radians(orientation))*step_size)))
-
-    # Calculating the clearance points
-    clearance_x =  current[0] + int(round((math.cos(math.radians(orientation))*clearance)))
-    clearance_y = current[1] + int(round((math.sin(math.radians(orientation))*clearance)))
-
-    newPoints = (new_x, new_y)
-    clearance_cord = (clearance_x, clearance_y)
-    if not canMove(newPoints) or not canMove(clearance_cord):
-        return False , None ,None , step_size
-    return True, newPoints, orientation, step_size    
-
-# Function to move left 30 degrees
-def move_left_30(node,step_size):
-    current = node.getPoints()
-    orientation = node.getOrientation()
-
-    new_x = current[0] + int(round((math.cos(math.radians(orientation-30))*step_size )))
-    new_y = current[1] + int(round((math.sin(math.radians(orientation-30))*step_size)))
-
-    # Calculating the clearance points
-    clearance_x =  current[0] + int(round((math.cos(math.radians(orientation -30 ))*clearance)))
-    clearance_y = current[1] + int(round((math.sin(math.radians(orientation -30))*clearance)))
-
-    newPoints = (new_x, new_y)
-    clearance_cord = (clearance_x, clearance_y)
-    if not canMove(newPoints) or not canMove(clearance_cord):
-        return False , None ,None , step_size
-    return True, newPoints, orientation-30, step_size
-
-# Function to move left 60 degrees
-def move_left_60(node,step_size):
-    current = node.getPoints()
-    orientation = node.getOrientation()
-
-    new_x = current[0] + int(round((math.cos(math.radians(orientation-60))*step_size )))
-    new_y = current[1] + int(round((math.sin(math.radians(orientation-60))*step_size)))
     
-    # Calculating the clearance points
-    clearance_x =  current[0] + int(round((math.cos(math.radians(orientation -60))*clearance)))
-    clearance_y = current[1] + int(round((math.sin(math.radians(orientation -60 ))*clearance)))
+def possible_increment(left_wheel_rpm, right_wheel_rpm,theta):
+    dt = 0.1
+    dx = 0.5*robot_wheel_radius*(left_wheel_rpm+right_wheel_rpm)*(math.cos(math.radians(theta)))*dt
+    dy = 0.5*robot_wheel_radius*(left_wheel_rpm+right_wheel_rpm)*(math.sin(math.radians(theta)))*dt
+    dtheta = (robot_wheel_radius/wheel_distance)*(right_wheel_rpm - left_wheel_rpm)*dt
+    return dx , dy , dtheta
 
-    newPoints = (new_x, new_y)
-    clearance_cord = (clearance_x, clearance_y)
-    if not canMove(newPoints) or not canMove(clearance_cord):
-        return False , None ,None , step_size
-    return True, newPoints, orientation-60, step_size
+    
 
-# Function to move right 30 degrees
-def move_right_30(node,step_size):
-    current = node.getPoints()
-    orientation = node.getOrientation()
+# # Function to move Straight
+# def moveStraight(node,step_size):
+#     current = node.getPoints()
+#     orientation = node.getOrientation()
 
-    new_x = current[0] + int(round((math.cos(math.radians(orientation+30))*step_size )))
-    new_y = current[1] + int(round((math.sin(math.radians(orientation+30))*step_size)))
+#     new_x = current[0] + int(round((math.cos(math.radians(orientation))*step_size)))
+#     new_y = current[1] + int(round((math.sin(math.radians(orientation))*step_size)))
 
-    # Calculating the clearance points
-    clearance_x =  current[0] + int(round((math.cos(math.radians(orientation +30))*clearance)))
-    clearance_y = current[1] + int(round((math.sin(math.radians(orientation +30 ))*clearance)))
+#     # Calculating the clearance points
+#     clearance_x =  current[0] + int(round((math.cos(math.radians(orientation))*clearance)))
+#     clearance_y = current[1] + int(round((math.sin(math.radians(orientation))*clearance)))
 
-    newPoints = (new_x, new_y)
-    clearance_cord = (clearance_x, clearance_y)
-    if not canMove(newPoints) or not canMove(clearance_cord):
-        return False , None ,None , step_size
-    return True, newPoints, orientation+30, step_size
+#     newPoints = (new_x, new_y)
+#     clearance_cord = (clearance_x, clearance_y)
+#     if not canMove(newPoints) or not canMove(clearance_cord):
+#         return False , None ,None , step_size
+#     return True, newPoints, orientation, step_size    
 
-# Function to move right 60 degrees
-def move_right_60(node,step_size):
-    current = node.getPoints()
-    orientation = node.getOrientation()
+# # Function to move left 30 degrees
+# def move_left_30(node,step_size):
+#     current = node.getPoints()
+#     orientation = node.getOrientation()
 
-    new_x = current[0] + int(round((math.cos(math.radians(orientation+60))*step_size )))
-    new_y = current[1] + int(round((math.sin(math.radians(orientation+60))*step_size)))
+#     new_x = current[0] + int(round((math.cos(math.radians(orientation-30))*step_size )))
+#     new_y = current[1] + int(round((math.sin(math.radians(orientation-30))*step_size)))
 
-    # Calculating the clearance points
-    clearance_x =  current[0] + int(round((math.cos(math.radians(orientation +60 ))*clearance)))
-    clearance_y = current[1] + int(round((math.sin(math.radians(orientation +60))*clearance)))
+#     # Calculating the clearance points
+#     clearance_x =  current[0] + int(round((math.cos(math.radians(orientation -30 ))*clearance)))
+#     clearance_y = current[1] + int(round((math.sin(math.radians(orientation -30))*clearance)))
 
-    newPoints = (new_x, new_y)
-    clearance_cord = (clearance_x, clearance_y)
-    if not canMove(newPoints) or not canMove(clearance_cord):
-        return False , None ,None , step_size
-    return True, newPoints, orientation+60, step_size
+#     newPoints = (new_x, new_y)
+#     clearance_cord = (clearance_x, clearance_y)
+#     if not canMove(newPoints) or not canMove(clearance_cord):
+#         return False , None ,None , step_size
+#     return True, newPoints, orientation-30, step_size
+
+# # Function to move left 60 degrees
+# def move_left_60(node,step_size):
+#     current = node.getPoints()
+#     orientation = node.getOrientation()
+
+#     new_x = current[0] + int(round((math.cos(math.radians(orientation-60))*step_size )))
+#     new_y = current[1] + int(round((math.sin(math.radians(orientation-60))*step_size)))
+    
+#     # Calculating the clearance points
+#     clearance_x =  current[0] + int(round((math.cos(math.radians(orientation -60))*clearance)))
+#     clearance_y = current[1] + int(round((math.sin(math.radians(orientation -60 ))*clearance)))
+
+#     newPoints = (new_x, new_y)
+#     clearance_cord = (clearance_x, clearance_y)
+#     if not canMove(newPoints) or not canMove(clearance_cord):
+#         return False , None ,None , step_size
+#     return True, newPoints, orientation-60, step_size
+
+# # Function to move right 30 degrees
+# def move_right_30(node,step_size):
+#     current = node.getPoints()
+#     orientation = node.getOrientation()
+
+#     new_x = current[0] + int(round((math.cos(math.radians(orientation+30))*step_size )))
+#     new_y = current[1] + int(round((math.sin(math.radians(orientation+30))*step_size)))
+
+#     # Calculating the clearance points
+#     clearance_x =  current[0] + int(round((math.cos(math.radians(orientation +30))*clearance)))
+#     clearance_y = current[1] + int(round((math.sin(math.radians(orientation +30 ))*clearance)))
+
+#     newPoints = (new_x, new_y)
+#     clearance_cord = (clearance_x, clearance_y)
+#     if not canMove(newPoints) or not canMove(clearance_cord):
+#         return False , None ,None , step_size
+#     return True, newPoints, orientation+30, step_size
+
+# # Function to move right 60 degrees
+# def move_right_60(node,step_size):
+#     current = node.getPoints()
+#     orientation = node.getOrientation()
+
+#     new_x = current[0] + int(round((math.cos(math.radians(orientation+60))*step_size )))
+#     new_y = current[1] + int(round((math.sin(math.radians(orientation+60))*step_size)))
+
+#     # Calculating the clearance points
+#     clearance_x =  current[0] + int(round((math.cos(math.radians(orientation +60 ))*clearance)))
+#     clearance_y = current[1] + int(round((math.sin(math.radians(orientation +60))*clearance)))
+
+#     newPoints = (new_x, new_y)
+#     clearance_cord = (clearance_x, clearance_y)
+#     if not canMove(newPoints) or not canMove(clearance_cord):
+#         return False , None ,None , step_size
+#     return True, newPoints, orientation+60, step_size
+
+
+
 
 # Check if point is in the goal threshold
 def in_goal_thershold(point,goal, thershold):
