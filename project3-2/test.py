@@ -1,7 +1,5 @@
-# github Link : https://github.com/KomK2/ENPM661/tree/project3
-
 # ENPM 661 - Planning for Autonomous Robots
-# Project 3 : Implementing A* Algorithm 
+# Project 3-2 : Implementing A* Algorithm 
 # Author : Kiran Kommaraju, Abhinav Bhamidipati
 # UID : komkiran, abhinav7
 
@@ -56,7 +54,7 @@ new_color = (255, 0, 0)
 
 # set clearance and step size
 clearance = 0
-stepSize = 0
+# stepSize = 0
 
 left_rpm =0
 right_rpm = 0
@@ -78,14 +76,14 @@ t = 0
 # Initializing Variables
 def initalize_varaibles():
     global clearance
-    global stepSize
+    # global stepSize
     global right_rpm
     global left_rpm
 
     
     # Input from the user
     clearance = int (input("Enter the clearance in mm: "))
-    stepSize = int (input("Enter the step size between 1 and 10 : "))
+    # stepSize = int (input("Enter the step size between 1 and 10 : "))
 
     right_rpm = int (input("enter right wheel rpm : "))
     left_rpm = int(input("enter left wheel rpm : "))
@@ -165,10 +163,10 @@ def start_end_goals():
     # initial_point = int(input("Enter the x coordinate of the initial point: ")), int(input("Enter the y coordinate of the initial point: "))
     # inital_orentation = int(input("Enter the orientation of robot at initial point ( multiple of 30 ): "))
 
-    initial_point = (500,1000)
+    initial_point = (500,250)
     inital_orentation = 0
 
-    goal_point = (5500, 750)
+    goal_point = (3000, 1000)
     goal_orentation = math.radians(0)
 
     # goal_point = int(input("Enter the x coordinate of the goal point: ")), int(input("Enter the y coordinate of the goal point: "))
@@ -207,9 +205,6 @@ def move(left, right,node, end_point):
         move_cost = math.sqrt((dx)**2 + (dy)**2)
         new_points = (new_x,new_y)
 
-        if obstacle_space(new_points):
-            return
-
         if not canMove(new_points):
             return 
         new_node = Node(points=new_points,orientation=new_theta, parent= current_node , cost= current_node.cost +move_cost , heuristic= heuristic((new_x, new_y),end_point))
@@ -221,7 +216,7 @@ def move(left, right,node, end_point):
         all_points.append(sub_node.getPoints())
 
     for p in range (len(all_points)-1):
-        cv2.line(canvas, all_points[p], all_points[p+1], new_color, thickness=5)
+        cv2.line(canvas, all_points[p], all_points[p+1], new_color, thickness=2)
     
     return node_list
 
@@ -288,7 +283,7 @@ def a_star(initial, final, inital_orentation ):
             path = []
             while current_node is not None:
                 path.append(current_node.getPoints())
-                canvas[current_node.getPoints()[1], current_node.getPoints()[0]] = (255, 255, 0)
+                canvas[current_node.getPoints()[1], current_node.getPoints()[0]] = (6, 142, 175)
                 current_node = current_node.getParent()
                 
             return path[::-1]
@@ -345,7 +340,7 @@ if __name__ == "__main__":
     cv2.circle(canvas, (intial[0], intial[1]), 5, (0, 255, 0), -1)  # Start node in white
     cv2.circle(canvas, (final[0], final[1]), 5, (0, 255, 0), -1)  # Goal node in green
 
-    # draw_arrow(shortest_path)
+    draw_arrow(shortest_path)
     # video_writer.release()
     # print(f"can move : {canMove((4167,736))}")
     show_image()
