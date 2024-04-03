@@ -200,7 +200,7 @@ def possible_increment(left_wheel_rpm, right_wheel_rpm,theta):
     left_wheel_rpm = ((2*np.pi)*left_wheel_rpm)/60
     right_wheel_rpm = ((2*np.pi)*right_wheel_rpm)/60
 
-    dt = 0.2
+    dt = 0.1
     dx = 0.5*robot_wheel_radius*(left_wheel_rpm+right_wheel_rpm)*(math.cos(theta))*dt
     dy = 0.5*robot_wheel_radius*(left_wheel_rpm+right_wheel_rpm)*(math.sin(theta))*dt
     dtheta = (robot_wheel_radius/wheel_distance)*(right_wheel_rpm - left_wheel_rpm)*dt
@@ -208,12 +208,12 @@ def possible_increment(left_wheel_rpm, right_wheel_rpm,theta):
 
 
 
-def move(left, right,node, end_point ):
+def move(left, right,node, end_point):
     current_node = node
     # For one move
     node_list = []
 
-    for i in range(25):
+    for i in range(5):
         current_points = current_node.getPoints()
         current_orentation = current_node.getOrientation()
 
@@ -238,7 +238,7 @@ def action2(node):
     return move( left=left_rpm, right= 0, node= node, end_point=final)
 
 def action3(node):
-    return move( left=left_rpm, right= right_rpm, node= node, end_point=final)
+    return move( left=left_rpm, right= left_rpm, node= node, end_point=final)
 
 def action4(node):
     return move( left=0, right= right_rpm, node= node, end_point=final)
@@ -247,7 +247,7 @@ def action5(node):
     return move( left=right_rpm, right= 0, node= node, end_point=final)
 
 def action6(node):
-    return move( left=right_rpm, right= left_rpm, node= node, end_point=final)
+    return move( left=right_rpm, right= right_rpm, node= node, end_point=final)
 
 def action7(node):
     return move( left=left_rpm, right= right_rpm, node= node, end_point=final)
@@ -259,7 +259,7 @@ def action8(node):
 def testFun(initial, final, inital_orentation, goal_orentation ):
     start_node = Node(initial, inital_orentation ,None, 0, heuristic(initial, final))
 
-    all_node = move( left=left_rpm, right= right_rpm, node= start_node, end_point=final)
+    all_node = action6(node= start_node)
     all_points = []
     for sub_node in all_node:
         # cv2.line(canvas, sub_node.getPoints(), end_point, color, thickness)
@@ -509,8 +509,8 @@ def draw_exploration(explored_node):
 if __name__ == "__main__":
     intial, final, inital_orentation, goal_orentation = start_end_goals()
     initalize_varaibles()
-    # testFun(intial, final,inital_orentation, goal_orentation)
-    shortest_path = new_astar(intial, final,inital_orentation, goal_orentation)
+    testFun(intial, final,inital_orentation, goal_orentation)
+    # shortest_path = new_astar(intial, final,inital_orentation, goal_orentation)
     
     # Visualize start and goal nodes
     cv2.circle(canvas, (intial[0], intial[1]), 5, (0, 255, 0), -1)  # Start node in white

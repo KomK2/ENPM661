@@ -87,8 +87,8 @@ def initalize_varaibles():
     clearance = int (input("Enter the clearance in mm: "))
     stepSize = int (input("Enter the step size between 1 and 10 : "))
 
-    right_rpm = int (input("enter right wheel rpm: "))
-    left_rpm = int(input("enter left wheel rpm"))
+    right_rpm = int (input("enter right wheel rpm : "))
+    left_rpm = int(input("enter left wheel rpm : "))
 
     
 
@@ -160,14 +160,19 @@ def canMove(point):
     return False
 
 # Start and End points from the user
+#<!--Note the star and end goals should be in radians per second>
 def start_end_goals():
-    initial_point = int(input("Enter the x coordinate of the initial point: ")), int(input("Enter the y coordinate of the initial point: "))
-    inital_orentation = int(input("Enter the orientation of robot at initial point ( multiple of 30 ): "))
+    # initial_point = int(input("Enter the x coordinate of the initial point: ")), int(input("Enter the y coordinate of the initial point: "))
+    # inital_orentation = int(input("Enter the orientation of robot at initial point ( multiple of 30 ): "))
 
-    goal_point = int(input("Enter the x coordinate of the goal point: ")), int(input("Enter the y coordinate of the goal point: "))
-    goal_orentation = int(input("Enter the orientation of robot at goal point ( multiple of 30 ): "))
+    initial_point = (500,1000)
+    inital_orentation = 0
 
+    goal_point = (5500, 750)
+    goal_orentation = math.radians(0)
 
+    # goal_point = int(input("Enter the x coordinate of the goal point: ")), int(input("Enter the y coordinate of the goal point: "))
+    # goal_orentation = int(input("Enter the orientation of robot at goal point ( multiple of 30 ): "))
 
     if canMove(initial_point) and canMove(goal_point):
         return initial_point, goal_point , inital_orentation, goal_orentation
@@ -175,106 +180,74 @@ def start_end_goals():
         print("Invalid points. Please enter valid points.")
         return start_end_goals()
     
-# def possible_increment(left_wheel_rpm, right_wheel_rpm,theta):
-#     dt = 0.1
-#     dx = 0.5*robot_wheel_radius*(left_wheel_rpm+right_wheel_rpm)*(math.cos(math.radians(theta)))*dt
-#     dy = 0.5*robot_wheel_radius*(left_wheel_rpm+right_wheel_rpm)*(math.sin(math.radians(theta)))*dt
-#     dtheta = (robot_wheel_radius/wheel_distance)*(right_wheel_rpm - left_wheel_rpm)*dt
-#     return dx , dy , dtheta
+def possible_increment(left_wheel_rpm, right_wheel_rpm,theta):
+    left_wheel_rpm = ((2*np.pi)*left_wheel_rpm)/60
+    right_wheel_rpm = ((2*np.pi)*right_wheel_rpm)/60
 
+    dt = 0.2
+    dx = 0.5*robot_wheel_radius*(left_wheel_rpm+right_wheel_rpm)*(math.cos(theta))*dt
+    dy = 0.5*robot_wheel_radius*(left_wheel_rpm+right_wheel_rpm)*(math.sin(theta))*dt
+    dtheta = (robot_wheel_radius/wheel_distance)*(right_wheel_rpm - left_wheel_rpm)*dt
+    return dx , dy , dtheta
+
+def move(left, right,node, end_point):
+    current_node = node
+    node_list = []
+
+    for i in range(5):
+        current_points = current_node.getPoints()
+        current_orentation = current_node.getOrientation()
+
+        dx , dy , dtheta = possible_increment(left,right, current_orentation)
+
+        new_x = int(round(current_points[0] + dx))
+        new_y = int(round(current_points[1] + dy))
+        new_theta = current_orentation + dtheta
+
+        move_cost = math.sqrt((dx)**2 + (dy)**2)
+        new_points = (new_x,new_y)
+
+        if obstacle_space(new_points):
+            return
+
+        if not canMove(new_points):
+            return 
+        new_node = Node(points=new_points,orientation=new_theta, parent= current_node , cost= current_node.cost +move_cost , heuristic= heuristic((new_x, new_y),end_point))
+        node_list.append(new_node)
+        current_node = new_node
+
+    all_points = []
+    for sub_node in node_list:
+        all_points.append(sub_node.getPoints())
+
+    for p in range (len(all_points)-1):
+        cv2.line(canvas, all_points[p], all_points[p+1], new_color, thickness=5)
     
+    return node_list
 
-# Function to move Straight
-def moveStraight(node,step_size):
-    current = node.getPoints()
-    orientation = node.getOrientation()
+def action1(node):
+    return move( left=0, right= left_rpm, node= node, end_point=final)
 
-    new_x = current[0] + int(round((math.cos(math.radians(orientation))*step_size)))
-    new_y = current[1] + int(round((math.sin(math.radians(orientation))*step_size)))
+def action2(node):
+    return move( left=left_rpm, right= 0, node= node, end_point=final)
 
-    # Calculating the clearance points
-    clearance_x =  current[0] + int(round((math.cos(math.radians(orientation))*clearance)))
-    clearance_y = current[1] + int(round((math.sin(math.radians(orientation))*clearance)))
+def action3(node):
+    return move( left=left_rpm, right= left_rpm, node= node, end_point=final)
 
-    newPoints = (new_x, new_y)
-    clearance_cord = (clearance_x, clearance_y)
-    if not canMove(newPoints) or not canMove(clearance_cord):
-        return False , None ,None , step_size
-    return True, newPoints, orientation, step_size    
+def action4(node):
+    return move( left=0, right= right_rpm, node= node, end_point=final)
 
-# Function to move left 30 degrees
-def move_left_30(node,step_size):
-    current = node.getPoints()
-    orientation = node.getOrientation()
+def action5(node):
+    return move( left=right_rpm, right= 0, node= node, end_point=final)
 
-    new_x = current[0] + int(round((math.cos(math.radians(orientation-30))*step_size )))
-    new_y = current[1] + int(round((math.sin(math.radians(orientation-30))*step_size)))
+def action6(node):
+    return move( left=right_rpm, right= right_rpm, node= node, end_point=final)
 
-    # Calculating the clearance points
-    clearance_x =  current[0] + int(round((math.cos(math.radians(orientation -30 ))*clearance)))
-    clearance_y = current[1] + int(round((math.sin(math.radians(orientation -30))*clearance)))
+def action7(node):
+    return move( left=left_rpm, right= right_rpm, node= node, end_point=final)
 
-    newPoints = (new_x, new_y)
-    clearance_cord = (clearance_x, clearance_y)
-    if not canMove(newPoints) or not canMove(clearance_cord):
-        return False , None ,None , step_size
-    return True, newPoints, orientation-30, step_size
-
-# Function to move left 60 degrees
-def move_left_60(node,step_size):
-    current = node.getPoints()
-    orientation = node.getOrientation()
-
-    new_x = current[0] + int(round((math.cos(math.radians(orientation-60))*step_size )))
-    new_y = current[1] + int(round((math.sin(math.radians(orientation-60))*step_size)))
-    
-    # Calculating the clearance points
-    clearance_x =  current[0] + int(round((math.cos(math.radians(orientation -60))*clearance)))
-    clearance_y = current[1] + int(round((math.sin(math.radians(orientation -60 ))*clearance)))
-
-    newPoints = (new_x, new_y)
-    clearance_cord = (clearance_x, clearance_y)
-    if not canMove(newPoints) or not canMove(clearance_cord):
-        return False , None ,None , step_size
-    return True, newPoints, orientation-60, step_size
-
-# Function to move right 30 degrees
-def move_right_30(node,step_size):
-    current = node.getPoints()
-    orientation = node.getOrientation()
-
-    new_x = current[0] + int(round((math.cos(math.radians(orientation+30))*step_size )))
-    new_y = current[1] + int(round((math.sin(math.radians(orientation+30))*step_size)))
-
-    # Calculating the clearance points
-    clearance_x =  current[0] + int(round((math.cos(math.radians(orientation +30))*clearance)))
-    clearance_y = current[1] + int(round((math.sin(math.radians(orientation +30 ))*clearance)))
-
-    newPoints = (new_x, new_y)
-    clearance_cord = (clearance_x, clearance_y)
-    if not canMove(newPoints) or not canMove(clearance_cord):
-        return False , None ,None , step_size
-    return True, newPoints, orientation+30, step_size
-
-# Function to move right 60 degrees
-def move_right_60(node,step_size):
-    current = node.getPoints()
-    orientation = node.getOrientation()
-
-    new_x = current[0] + int(round((math.cos(math.radians(orientation+60))*step_size )))
-    new_y = current[1] + int(round((math.sin(math.radians(orientation+60))*step_size)))
-
-    # Calculating the clearance points
-    clearance_x =  current[0] + int(round((math.cos(math.radians(orientation +60 ))*clearance)))
-    clearance_y = current[1] + int(round((math.sin(math.radians(orientation +60))*clearance)))
-
-    newPoints = (new_x, new_y)
-    clearance_cord = (clearance_x, clearance_y)
-    if not canMove(newPoints) or not canMove(clearance_cord):
-        return False , None ,None , step_size
-    return True, newPoints, orientation+60, step_size
-
-
+def action8(node):
+    return move( left=right_rpm, right= left_rpm, node= node, end_point=final)
 
 
 # Check if point is in the goal threshold
@@ -290,7 +263,7 @@ def heuristic(point1, point2):
     return math.sqrt((point1[0] - point2[0])**2 + (point1[1] - point2[1])**2)
 
 # A* Algorithm 
-def a_star(initial, final, inital_orentation, goal_orentation ):
+def a_star(initial, final, inital_orentation ):
     # Initialize lists
     open_list = PriorityQueue()
     closed_list = set()
@@ -305,11 +278,13 @@ def a_star(initial, final, inital_orentation, goal_orentation ):
     count =0
     while not open_list.empty():
         count = count +1
+
         current_node = open_list.get()[1]
         current_point = current_node.getPoints()
 
         # Check if current point is within the goal threshold
-        if in_goal_thershold(current_point,final, 1.5):
+        if in_goal_thershold(current_point,final, 100):
+            print("Goal reached")
             path = []
             while current_node is not None:
                 path.append(current_node.getPoints())
@@ -319,10 +294,12 @@ def a_star(initial, final, inital_orentation, goal_orentation ):
             return path[::-1]
 
         # Move in all directions
-        for move in [moveStraight, move_left_30, move_left_60, move_right_30, move_right_60]:
-            can_move, new_point, new_orentation, new_cost = move(current_node,stepSize)
-            if can_move:
-                new_node = Node(new_point, new_orentation ,current_node, current_node.cost + new_cost, heuristic(new_point, final))
+        for move in [action1, action2, action3, action4, action5, action6, action7, action8]:
+            one_move_sub_nodes = move(current_node)
+            if one_move_sub_nodes is not None:
+                new_node = one_move_sub_nodes[len(one_move_sub_nodes)-1]
+                # new_node = Node(new_point, new_orentation ,current_node, current_node.cost + new_cost, heuristic(new_point, final))
+                new_point = new_node.getPoints()
                 if new_point not in closed_list:
                     if new_point not in visited:
                         open_list.put((new_node.total_cost, new_node))
@@ -330,8 +307,8 @@ def a_star(initial, final, inital_orentation, goal_orentation ):
                         closed_list.add(new_point)
                         
                         # canvas[new_point[1], new_point[0]] = new_color
-                        draw_exploration(new_node)
-                        if count %300 == 0:
+                        # draw_exploration(new_node)
+                        if count %1000 == 0:
                             resized_canvas = cv2.resize(canvas, (1200, 400))
                             cv2.imshow("abhinav1" ,resized_canvas)
                             cv2.waitKey(1)
@@ -361,12 +338,14 @@ def draw_exploration(explored_node):
 if __name__ == "__main__":
     intial, final, inital_orentation, goal_orentation = start_end_goals()
     initalize_varaibles()
-    shortest_path = a_star(intial, final,inital_orentation, goal_orentation)
+    print("Exploring world. Please wait !!")
+    shortest_path = a_star(intial, final,inital_orentation)
     
     # Visualize start and goal nodes
     cv2.circle(canvas, (intial[0], intial[1]), 5, (0, 255, 0), -1)  # Start node in white
     cv2.circle(canvas, (final[0], final[1]), 5, (0, 255, 0), -1)  # Goal node in green
 
-    draw_arrow(shortest_path)
+    # draw_arrow(shortest_path)
     # video_writer.release()
+    # print(f"can move : {canMove((4167,736))}")
     show_image()
