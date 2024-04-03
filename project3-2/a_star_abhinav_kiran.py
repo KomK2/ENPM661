@@ -62,8 +62,8 @@ left_rpm =0
 right_rpm = 0
 
 # robot_radius = 38  
-robot_wheel_radius = 30
-wheel_distance = 354  
+robot_wheel_radius = 33 #r
+wheel_distance = 306  #L
 dt = 0.1
 t = 0
 
@@ -83,16 +83,20 @@ def initalize_varaibles():
     global left_rpm
 
     
-    # Input from the user
-    clearance = int (input("Enter the clearance in mm: "))
-    stepSize = int (input("Enter the step size between 1 and 10 : "))
+    # # Input from the user
+    # clearance = int (input("Enter the clearance in mm: "))
+    # stepSize = int (input("Enter the step size between 1 and 10 : "))
 
     right_rpm = int (input("enter right wheel rpm: "))
     left_rpm = int(input("enter left wheel rpm"))
 
+
+    clearance = 4
+    stepSize =7
+
+
+
     
-
-
 
 # Calculating vertices of the hexagon
 def hexagon_vertex() :
@@ -161,13 +165,17 @@ def canMove(point):
 
 # Start and End points from the user
 def start_end_goals():
-    initial_point = int(input("Enter the x coordinate of the initial point: ")), int(input("Enter the y coordinate of the initial point: "))
-    inital_orentation = int(input("Enter the orientation of robot at initial point ( multiple of 30 ): "))
+    # initial_point = int(input("Enter the x coordinate of the initial point: ")), int(input("Enter the y coordinate of the initial point: "))
+    # inital_orentation = int(input("Enter the orientation of robot at initial point ( multiple of 30 ): "))
 
-    goal_point = int(input("Enter the x coordinate of the goal point: ")), int(input("Enter the y coordinate of the goal point: "))
-    goal_orentation = int(input("Enter the orientation of robot at goal point ( multiple of 30 ): "))
+    initial_point = (500,1000)
+    inital_orentation = 0
 
+    goal_point = (5500, 750)
+    goal_orentation = math.radians(0)
 
+    # goal_point = int(input("Enter the x coordinate of the goal point: ")), int(input("Enter the y coordinate of the goal point: "))
+    # goal_orentation = int(input("Enter the orientation of robot at goal point ( multiple of 30 ): "))
 
     if canMove(initial_point) and canMove(goal_point):
         return initial_point, goal_point , inital_orentation, goal_orentation
@@ -175,14 +183,168 @@ def start_end_goals():
         print("Invalid points. Please enter valid points.")
         return start_end_goals()
     
+
+# Check if point is in the goal threshold
+def in_goal_thershold(point,goal, thershold):
+    x , y = point[0] ,point[1]
+    circle_center_x, circle_center_y, = goal[0], goal[1]
+    radius = thershold
+    distance = math.sqrt((x - circle_center_x) ** 2 + (y - circle_center_y) ** 2)
+    return distance <= radius
+
+# Calculate the heuristic value = Eulicdean distance
+def heuristic(point1, point2):
+    return math.sqrt((point1[0] - point2[0])**2 + (point1[1] - point2[1])**2)
+    
 def possible_increment(left_wheel_rpm, right_wheel_rpm,theta):
-    dt = 0.1
-    dx = 0.5*robot_wheel_radius*(left_wheel_rpm+right_wheel_rpm)*(math.cos(math.radians(theta)))*dt
-    dy = 0.5*robot_wheel_radius*(left_wheel_rpm+right_wheel_rpm)*(math.sin(math.radians(theta)))*dt
+    left_wheel_rpm = ((2*np.pi)*left_wheel_rpm)/60
+    right_wheel_rpm = ((2*np.pi)*right_wheel_rpm)/60
+
+    dt = 0.2
+    dx = 0.5*robot_wheel_radius*(left_wheel_rpm+right_wheel_rpm)*(math.cos(theta))*dt
+    dy = 0.5*robot_wheel_radius*(left_wheel_rpm+right_wheel_rpm)*(math.sin(theta))*dt
     dtheta = (robot_wheel_radius/wheel_distance)*(right_wheel_rpm - left_wheel_rpm)*dt
     return dx , dy , dtheta
 
+
+
+def move(left, right,node, end_point ):
+    current_node = node
+    # For one move
+    node_list = []
+
+    for i in range(25):
+        current_points = current_node.getPoints()
+        current_orentation = current_node.getOrientation()
+
+        dx , dy , dtheta = possible_increment(left,right, current_orentation)
+
+        new_x = int(round(current_points[0] + dx))
+        new_y = int(round(current_points[1] + dy))
+        new_theta = current_orentation + dtheta
+
+        if not canMove((new_x,new_y)):
+            return 
+        new_node = Node((new_x,new_y),new_theta, parent= current_node , cost= current_node.cost +dx , heuristic= heuristic((new_x, new_y),end_point))
+        node_list.append(new_node)
+        current_node = new_node
     
+    return node_list
+
+def action1(node):
+    return move( left=0, right= left_rpm, node= node, end_point=final)
+
+def action2(node):
+    return move( left=left_rpm, right= 0, node= node, end_point=final)
+
+def action3(node):
+    return move( left=left_rpm, right= right_rpm, node= node, end_point=final)
+
+def action4(node):
+    return move( left=0, right= right_rpm, node= node, end_point=final)
+
+def action5(node):
+    return move( left=right_rpm, right= 0, node= node, end_point=final)
+
+def action6(node):
+    return move( left=right_rpm, right= left_rpm, node= node, end_point=final)
+
+def action7(node):
+    return move( left=left_rpm, right= right_rpm, node= node, end_point=final)
+
+def action8(node):
+    return move( left=right_rpm, right= left_rpm, node= node, end_point=final)
+
+
+def testFun(initial, final, inital_orentation, goal_orentation ):
+    start_node = Node(initial, inital_orentation ,None, 0, heuristic(initial, final))
+
+    all_node = move( left=left_rpm, right= right_rpm, node= start_node, end_point=final)
+    all_points = []
+    for sub_node in all_node:
+        # cv2.line(canvas, sub_node.getPoints(), end_point, color, thickness)
+        all_points.append(sub_node.getPoints())
+
+    for p in range (len(all_points)-1):
+        cv2.line(canvas, all_points[p], all_points[p+1], new_color, thickness=5)
+
+def draw_all_explored(all_node):
+    all_points = []
+
+    for sub_node in all_node:
+        all_points.append(sub_node.getPoints())
+
+    for p in range (len(all_points)-1):
+        cv2.line(canvas, all_points[p], all_points[p+1], new_color, thickness=5)
+
+
+def new_astar(initial, final, inital_orentation, goal_orentation ):
+    print("working 1")
+
+    # Initialize lists
+    open_list = PriorityQueue()
+    closed_list = set()
+    visited = dict()
+
+    start_node = Node(initial, inital_orentation ,None, 0, heuristic(initial, final))
+
+    open_list.put((start_node.total_cost, start_node))
+    visited[initial] = start_node
+    closed_list.add(initial)
+    
+    count =0
+    
+    while not open_list.empty():
+        count = count + 1
+        print("working2")
+        current_node = open_list.get()[1]
+        current_point = current_node.getPoints()
+
+        # Check if current point is within the goal threshold
+        if in_goal_thershold(current_point,final, 100):
+            print("goal reached")
+            path = []
+            while current_node is not None:
+                path.append(current_node.getPoints())
+                canvas[current_node.getPoints()[1], current_node.getPoints()[0]] = (255, 255, 0)
+                current_node = current_node.getParent()
+            return path[::-1]
+        
+
+        # Move in all directions
+        for move in [action1, action2, action3, action4, action5, action6, action7 ,action8]:
+            print("", end = " ")
+            node_list = move(current_node)
+            if node_list:
+                new_node = node_list[len(node_list)-1]
+                if new_node.getPoints() not in closed_list:
+                    if new_node.getPoints() not in visited:
+                        open_list.put((new_node.total_cost, new_node))
+                        visited[new_node.getPoints()] = new_node
+                        closed_list.add(new_node.getPoints())
+                        
+                        # canvas[new_node.getPoints()[1], new_node.getPoints()[0]] = new_color
+                        # draw_exploration(new_node)
+                        draw_all_explored(node_list)
+                        if count %300 == 0:
+                            resized_canvas = cv2.resize(canvas, (1200, 400))
+                            cv2.imshow("abhinav1" ,resized_canvas)
+                            cv2.waitKey(1)
+
+                        # video_writer.write(canvas)
+                    else:
+                        if visited[new_node.getPoints()].total_cost > new_node.total_cost:
+                            visited[new_node.getPoints()] = new_node
+                            open_list.put((new_node.total_cost, new_node))
+
+
+
+        
+
+
+
+
+
 
 # # Function to move Straight
 # def moveStraight(node,step_size):
@@ -277,64 +439,55 @@ def possible_increment(left_wheel_rpm, right_wheel_rpm,theta):
 
 
 
-# Check if point is in the goal threshold
-def in_goal_thershold(point,goal, thershold):
-    x , y = point[0] ,point[1]
-    circle_center_x, circle_center_y, = goal[0], goal[1]
-    radius = thershold
-    distance = math.sqrt((x - circle_center_x) ** 2 + (y - circle_center_y) ** 2)
-    return distance <= radius
 
-# Calculate the heuristic value = Eulicdean distance
-def heuristic(point1, point2):
-    return math.sqrt((point1[0] - point2[0])**2 + (point1[1] - point2[1])**2)
+
 
 # A* Algorithm 
-def a_star(initial, final, inital_orentation, goal_orentation ):
-    # Initialize lists
-    open_list = PriorityQueue()
-    closed_list = set()
-    visited = dict()
+# def a_star(initial, final, inital_orentation, goal_orentation ):
+#     # Initialize lists
+#     open_list = PriorityQueue()
+#     closed_list = set()
+#     visited = dict()
 
-    start_node = Node(initial, inital_orentation ,None, 0, heuristic(initial, final))
+#     start_node = Node(initial, inital_orentation ,None, 0, heuristic(initial, final))
 
-    open_list.put((start_node.total_cost, start_node))
-    visited[initial] = start_node
-    closed_list.add(initial)
+#     open_list.put((start_node.total_cost, start_node))
+#     visited[initial] = start_node
+#     closed_list.add(initial)
     
     
-    while not open_list.empty():
-        current_node = open_list.get()[1]
-        current_point = current_node.getPoints()
+#     while not open_list.empty():
+#         current_node = open_list.get()[1]
+#         current_point = current_node.getPoints()
 
-        # Check if current point is within the goal threshold
-        if in_goal_thershold(current_point,final, 1.5):
-            path = []
-            while current_node is not None:
-                path.append(current_node.getPoints())
-                canvas[current_node.getPoints()[1], current_node.getPoints()[0]] = (255, 255, 0)
-                current_node = current_node.getParent()
+#         # Check if current point is within the goal threshold
+#         if in_goal_thershold(current_point,final, 1.5):
+#             path = []
+#             while current_node is not None:
+#                 path.append(current_node.getPoints())
+#                 canvas[current_node.getPoints()[1], current_node.getPoints()[0]] = (255, 255, 0)
+#                 current_node = current_node.getParent()
                 
-            return path[::-1]
+#             return path[::-1]
 
-        # Move in all directions
-        for move in [moveStraight, move_left_30, move_left_60, move_right_30, move_right_60]:
-            can_move, new_point, new_orentation, new_cost = move(current_node,stepSize)
-            if can_move:
-                new_node = Node(new_point, new_orentation ,current_node, current_node.cost + new_cost, heuristic(new_point, final))
-                if new_point not in closed_list:
-                    if new_point not in visited:
-                        open_list.put((new_node.total_cost, new_node))
-                        visited[new_point] = new_node
-                        closed_list.add(new_point)
+#         # Move in all directions
+#         for move in [moveStraight, move_left_30, move_left_60, move_right_30, move_right_60]:
+#             can_move, new_point, new_orentation, new_cost = move(current_node,stepSize)
+#             if can_move:
+#                 new_node = Node(new_point, new_orentation ,current_node, current_node.cost + new_cost, heuristic(new_point, final))
+#                 if new_point not in closed_list:
+#                     if new_point not in visited:
+#                         open_list.put((new_node.total_cost, new_node))
+#                         visited[new_point] = new_node
+#                         closed_list.add(new_point)
                         
-                        # canvas[new_point[1], new_point[0]] = new_color
-                        draw_exploration(new_node)
-                        # video_writer.write(canvas)
-                    else:
-                        if visited[new_point].total_cost > new_node.total_cost:
-                            visited[new_point] = new_node
-                            open_list.put((new_node.total_cost, new_node))
+#                         # canvas[new_point[1], new_point[0]] = new_color
+#                         draw_exploration(new_node)
+#                         # video_writer.write(canvas)
+#                     else:
+#                         if visited[new_point].total_cost > new_node.total_cost:
+#                             visited[new_point] = new_node
+#                             open_list.put((new_node.total_cost, new_node))
 
 # Draw the path as arrows 
 def draw_arrow(path):
@@ -348,7 +501,7 @@ def draw_arrow(path):
 # Draw the exploration of the nodes
 def draw_exploration(explored_node):
     if explored_node.getParent() is not None:
-        cv2.line(canvas, explored_node.getPoints(), explored_node.getParent().getPoints() , new_color, thickness=1, lineType=cv2.LINE_8, shift=0)
+        cv2.line(canvas, explored_node.getPoints(), explored_node.getParent().getPoints() , new_color, thickness=5)
 
         # cv2.arrowedLine(canvas, explored_node.getPoints(), explored_node.getParent().getPoints() , new_color, 1 , tipLength= 0.5)
 
@@ -356,12 +509,13 @@ def draw_exploration(explored_node):
 if __name__ == "__main__":
     intial, final, inital_orentation, goal_orentation = start_end_goals()
     initalize_varaibles()
-    shortest_path = a_star(intial, final,inital_orentation, goal_orentation)
+    # testFun(intial, final,inital_orentation, goal_orentation)
+    shortest_path = new_astar(intial, final,inital_orentation, goal_orentation)
     
     # Visualize start and goal nodes
     cv2.circle(canvas, (intial[0], intial[1]), 5, (0, 255, 0), -1)  # Start node in white
     cv2.circle(canvas, (final[0], final[1]), 5, (0, 255, 0), -1)  # Goal node in green
 
-    draw_arrow(shortest_path)
+    #draw_arrow(shortest_path)
     # video_writer.release()
     show_image()
