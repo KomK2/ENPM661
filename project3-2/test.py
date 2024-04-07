@@ -52,9 +52,6 @@ canvas = np.ones((2000, 6000, 3), dtype=np.uint8 )
 # color for exploration of nodes
 new_color = (255, 0, 0)
 
-# set clearance and step size
-clearance = 0
-# stepSize = 0
 
 left_rpm =0
 right_rpm = 0
@@ -62,7 +59,7 @@ right_rpm = 0
 # robot_radius = 38  
 robot_wheel_radius = 30
 wheel_distance = 354  
-dt = 0.1
+dt = 0.3
 t = 0
 
 
@@ -75,43 +72,24 @@ t = 0
 
 # Initializing Variables
 def initalize_varaibles():
-    global clearance
-    # global stepSize
     global right_rpm
     global left_rpm
 
-    
-    # Input from the user
-    clearance = int (input("Enter the clearance in mm: "))
-    # stepSize = int (input("Enter the step size between 1 and 10 : "))
 
     right_rpm = int (input("enter right wheel rpm : "))
     left_rpm = int(input("enter left wheel rpm : "))
 
-    
-
-
-
-# Calculating vertices of the hexagon
-def hexagon_vertex() :
-    hexagon_vertex = []
-    for i in range(6):
-        angle_rad = math.radians(30 + 60 * i)  # 60 degrees between each vertex
-        x_coordinate = int(650 + 150 * math.cos(angle_rad))
-        y_coordinate = int(250 + 150 * math.sin(angle_rad))
-        hexagon_vertex.append((x_coordinate, y_coordinate))
-    return hexagon_vertex
 
 # Rectangle 1
-cv2.rectangle(canvas, (1500, y-2000), (1750, y-1000), (255, 0, 255), 10 )
+cv2.rectangle(canvas, (1500, y-2000), (1750, y-1000), (255, 0, 255), 175)
 cv2.rectangle(canvas, (1500, y-2000), (1750, y-1000), (0, 0, 255), -1)
 
 # Rectangle 2
-cv2.rectangle(canvas, (2500, y-1000), (2750, y-0), (255, 0, 255), 10)
+cv2.rectangle(canvas, (2500, y-1000), (2750, y-0), (255, 0, 255), 175)
 cv2.rectangle(canvas, (2500, y-1000), (2750, y-0), (0, 0, 255), -1)
 
 # Circle shape
-cv2.circle(canvas, (4200, y-1200), 600, (255, 0, 255), 10)
+cv2.circle(canvas, (4200, y-1200), 600, (255, 0, 255), 175)
 cv2.circle(canvas, (4200, y-1200), 600, (0, 0, 255), -1)
 
 
@@ -136,13 +114,13 @@ def is_in_circle(center, radius, point):
 # Check if point is inside the obstacle space    
 def obstacle_space(point):
     # Check if point is inside the rectangle
-    if is_in_rectangle((1500, 2000), (1750, 1000), point):
+    if is_in_rectangle((1500-150, y-2000), (1750+150, y-(1000 +150)), point):
         return True
     # Check if point is inside the rectangle
-    if is_in_rectangle((2500, 1000), (2750, 0), point):
+    if is_in_rectangle((2500-150, y-1000), (2750, y-150), point):
         return True
     # Check if point is inside the Circle
-    if is_in_circle((4200, 1200), 600, point):
+    if is_in_circle((4200, y-1200), 600+150, point):
         return True
     return False
 
@@ -163,10 +141,10 @@ def start_end_goals():
     # initial_point = int(input("Enter the x coordinate of the initial point: ")), int(input("Enter the y coordinate of the initial point: "))
     # inital_orentation = int(input("Enter the orientation of robot at initial point ( multiple of 30 ): "))
 
-    initial_point = (500,250)
-    inital_orentation = 0
+    initial_point = (500,1000)
+    inital_orentation = math.radians(60)
 
-    goal_point = (3000, 1000)
+    goal_point = (5500, 1000)
     goal_orentation = math.radians(0)
 
     # goal_point = int(input("Enter the x coordinate of the goal point: ")), int(input("Enter the y coordinate of the goal point: "))
@@ -182,17 +160,18 @@ def possible_increment(left_wheel_rpm, right_wheel_rpm,theta):
     left_wheel_rpm = ((2*np.pi)*left_wheel_rpm)/60
     right_wheel_rpm = ((2*np.pi)*right_wheel_rpm)/60
 
-    dt = 0.2
+    dt = 0.5
     dx = 0.5*robot_wheel_radius*(left_wheel_rpm+right_wheel_rpm)*(math.cos(theta))*dt
     dy = 0.5*robot_wheel_radius*(left_wheel_rpm+right_wheel_rpm)*(math.sin(theta))*dt
     dtheta = (robot_wheel_radius/wheel_distance)*(right_wheel_rpm - left_wheel_rpm)*dt
     return dx , dy , dtheta
 
-def move(left, right,node, end_point):
-    current_node = node
+
+def move(left, right,node2, end_point):
+    current_node = node2
     node_list = []
 
-    for i in range(5):
+    for i in range(8):
         current_points = current_node.getPoints()
         current_orentation = current_node.getOrientation()
 
@@ -211,38 +190,34 @@ def move(left, right,node, end_point):
         node_list.append(new_node)
         current_node = new_node
 
-    all_points = []
     for sub_node in node_list:
-        all_points.append(sub_node.getPoints())
+        cv2.line(canvas, sub_node.getPoints(), sub_node.getParent().getPoints(), new_color, 1)
 
-    for p in range (len(all_points)-1):
-        cv2.line(canvas, all_points[p], all_points[p+1], new_color, thickness=2)
-    
     return node_list
 
-def action1(node):
-    return move( left=0, right= left_rpm, node= node, end_point=final)
+def action1(node1):
+    return move( left=0, right= left_rpm, node2= node1, end_point=final)
 
-def action2(node):
-    return move( left=left_rpm, right= 0, node= node, end_point=final)
+def action2(node1):
+    return move( left=left_rpm, right= 0, node2= node1, end_point=final)
 
-def action3(node):
-    return move( left=left_rpm, right= left_rpm, node= node, end_point=final)
+def action3(node1):
+    return move( left=left_rpm, right= left_rpm, node2= node1, end_point=final)
 
-def action4(node):
-    return move( left=0, right= right_rpm, node= node, end_point=final)
+def action4(node1):
+    return move( left=0, right= right_rpm, node2= node1, end_point=final)
 
-def action5(node):
-    return move( left=right_rpm, right= 0, node= node, end_point=final)
+def action5(node1):
+    return move( left=right_rpm, right= 0, node2= node1, end_point=final)
 
-def action6(node):
-    return move( left=right_rpm, right= right_rpm, node= node, end_point=final)
+def action6(node1):
+    return move( left=right_rpm, right= right_rpm, node2= node1, end_point=final)
 
-def action7(node):
-    return move( left=left_rpm, right= right_rpm, node= node, end_point=final)
+def action7(node1):
+    return move( left=left_rpm, right= right_rpm, node2= node1, end_point=final)
 
-def action8(node):
-    return move( left=right_rpm, right= left_rpm, node= node, end_point=final)
+def action8(node1):
+    return move( left=right_rpm, right= left_rpm, node2= node1, end_point=final)
 
 
 # Check if point is in the goal threshold
@@ -293,7 +268,6 @@ def a_star(initial, final, inital_orentation ):
             one_move_sub_nodes = move(current_node)
             if one_move_sub_nodes is not None:
                 new_node = one_move_sub_nodes[len(one_move_sub_nodes)-1]
-                # new_node = Node(new_point, new_orentation ,current_node, current_node.cost + new_cost, heuristic(new_point, final))
                 new_point = new_node.getPoints()
                 if new_point not in closed_list:
                     if new_point not in visited:
@@ -301,12 +275,10 @@ def a_star(initial, final, inital_orentation ):
                         visited[new_point] = new_node
                         closed_list.add(new_point)
                         
-                        # canvas[new_point[1], new_point[0]] = new_color
-                        # draw_exploration(new_node)
-                        if count %1000 == 0:
-                            resized_canvas = cv2.resize(canvas, (1200, 400))
-                            cv2.imshow("abhinav1" ,resized_canvas)
-                            cv2.waitKey(1)
+                        # if count %1000 == 0:
+                        #     resized_canvas = cv2.resize(canvas, (1200, 400))
+                        #     cv2.imshow("abhinav1" ,resized_canvas)
+                        #     cv2.waitKey(1)
                         # video_writer.write(canvas)
                     else:
                         if visited[new_point].total_cost > new_node.total_cost:
@@ -319,15 +291,9 @@ def draw_arrow(path):
     for i in range(len(path) - 1):
         start_node = path[i]
         end_node = path[i + 1]
-        cv2.arrowedLine(canvas, start_node, end_node, (0, 255, 0), 1 , tipLength= 0.5)
+        cv2.arrowedLine(canvas, start_node, end_node, (0, 255, 0), 5 , tipLength= 0.5)
         # video_writer.write(canvas)
         
-# Draw the exploration of the nodes
-def draw_exploration(explored_node):
-    if explored_node.getParent() is not None:
-        cv2.line(canvas, explored_node.getPoints(), explored_node.getParent().getPoints() , new_color, thickness=1, lineType=cv2.LINE_8, shift=0)
-
-        # cv2.arrowedLine(canvas, explored_node.getPoints(), explored_node.getParent().getPoints() , new_color, 1 , tipLength= 0.5)
 
 # Main function
 if __name__ == "__main__":
