@@ -81,15 +81,15 @@ def initalize_varaibles():
 
 
 # Rectangle 1
-cv2.rectangle(canvas, (1500, y-2000), (1750, y-1000), (255, 0, 255), 175)
+# cv2.rectangle(canvas, (1500, y-2000), (1750, y-1000), (255, 0, 255), 175)
 cv2.rectangle(canvas, (1500, y-2000), (1750, y-1000), (0, 0, 255), -1)
 
 # Rectangle 2
-cv2.rectangle(canvas, (2500, y-1000), (2750, y-0), (255, 0, 255), 175)
+# cv2.rectangle(canvas, (2500, y-1000), (2750, y-0), (255, 0, 255), 175)
 cv2.rectangle(canvas, (2500, y-1000), (2750, y-0), (0, 0, 255), -1)
 
 # Circle shape
-cv2.circle(canvas, (4200, y-1200), 600, (255, 0, 255), 175)
+# cv2.circle(canvas, (4200, y-1200), 600, (255, 0, 255), 175)
 cv2.circle(canvas, (4200, y-1200), 600, (0, 0, 255), -1)
 
 
@@ -128,6 +128,12 @@ def obstacle_space(point):
 def canMove(point):
     if point[0] < 6 or point[0] > 5995 or point[1] < 6 or point[1] > 1995:
         return False 
+    if ((point[0] > (1500-100)) and (point[0] <(1750+100) ) and ((point[1] > 0) and (point[1] <(1000+100)) )):
+        return False
+    if ((point[0] > (2500-100)) and (point[0] <(2750+100) ) and ((point[1] < 2000) and (point[1] >(1000-100)))):
+        return False
+    if is_in_circle((4200, y-1200), 600+125, point):
+        return False
     point_color = canvas[point[1], point[0]]
     if point_color[0] == 1 and point_color[1] == 1 and point_color[2] == 1:
         return True
@@ -275,10 +281,10 @@ def a_star(initial, final, inital_orentation ):
                         visited[new_point] = new_node
                         closed_list.add(new_point)
                         
-                        # if count %1000 == 0:
-                        #     resized_canvas = cv2.resize(canvas, (1200, 400))
-                        #     cv2.imshow("abhinav1" ,resized_canvas)
-                        #     cv2.waitKey(1)
+                        if count %1000 == 0:
+                            resized_canvas = cv2.resize(canvas, (1200, 400))
+                            cv2.imshow("abhinav1" ,resized_canvas)
+                            cv2.waitKey(1)
                         # video_writer.write(canvas)
                     else:
                         if visited[new_point].total_cost > new_node.total_cost:
@@ -299,10 +305,10 @@ def draw_arrow(path):
 if __name__ == "__main__":
     intial, final, inital_orentation, goal_orentation = start_end_goals()
     initalize_varaibles()
-    print("Exploring world. Please wait !!")
+    print("Exploring the world. Please wait !!")
     shortest_path = a_star(intial, final,inital_orentation)
     
-    # Visualize start and goal nodes
+    # # Visualize start and goal nodes
     cv2.circle(canvas, (intial[0], intial[1]), 5, (0, 255, 0), -1)  # Start node in white
     cv2.circle(canvas, (final[0], final[1]), 5, (0, 255, 0), -1)  # Goal node in green
 
