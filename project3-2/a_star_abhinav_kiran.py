@@ -156,7 +156,8 @@ def start_end_goals():
     else:
         print("Invalid points. Please enter valid points.")
         return start_end_goals()
-    
+
+    #possible increment for the step 
 def possible_increment(left_wheel_rpm, right_wheel_rpm,theta):
     left_wheel_rpm = ((2*np.pi)*left_wheel_rpm)/60
     right_wheel_rpm = ((2*np.pi)*right_wheel_rpm)/60
@@ -167,6 +168,8 @@ def possible_increment(left_wheel_rpm, right_wheel_rpm,theta):
     dtheta = (robot_wheel_radius/wheel_distance)*(right_wheel_rpm - left_wheel_rpm)*dt
     return dx , dy , dtheta
 
+
+# function for each action node
 
 def move(left, right,node2, end_point):
     current_node = node2
@@ -195,6 +198,9 @@ def move(left, right,node2, end_point):
         cv2.line(canvas, sub_node.getPoints(), sub_node.getParent().getPoints(), new_color, 2)
 
     return node_list
+
+
+# all action nodes
 
 def action1(node1):
     return move( left=0, right= left_rpm, node2= node1, end_point=final)
