@@ -57,6 +57,7 @@ left_rpm =0
 right_rpm = 0
 
 # robot_radius = 38  
+clearance = 0
 robot_wheel_radius = 30
 wheel_distance = 354  
 dt = 0.3
@@ -74,10 +75,11 @@ t = 0
 def initalize_varaibles():
     global right_rpm
     global left_rpm
+    global clearance
 
-
-    right_rpm = int (input("enter right wheel rpm : "))
-    left_rpm = int(input("enter left wheel rpm : "))
+    clearance= int(input("give robot clearance"))
+    right_rpm = int (input("enter rpm 1: "))
+    left_rpm = int(input("enter rpm 2: "))
 
 
 # Rectangle 1
@@ -144,17 +146,17 @@ def canMove(point):
 # Start and End points from the user
 #<!--Note the star and end goals should be in radians per second>
 def start_end_goals():
-    # initial_point = int(input("Enter the x coordinate of the initial point: ")), int(input("Enter the y coordinate of the initial point: "))
-    # inital_orentation = int(input("Enter the orientation of robot at initial point ( multiple of 30 ): "))
+    initial_point = int(input("Enter the x coordinate of the initial point: ")), int(input("Enter the y coordinate of the initial point: "))
+    inital_orentation = math.radians(int(input("Enter the orientation of robot at initial point ( multiple of 30 ): ")))
 
-    initial_point = (500,1000)
-    inital_orentation = math.radians(60)
+    # initial_point = (500,1000)
+    # inital_orentation = math.radians(60)
 
-    goal_point = (5500, 1000)
+    # goal_point = (5500, 1000)
+    # goal_orentation = math.radians(0)
+
+    goal_point = int(input("Enter the x coordinate of the goal point: ")), int(input("Enter the y coordinate of the goal point: "))
     goal_orentation = math.radians(0)
-
-    # goal_point = int(input("Enter the x coordinate of the goal point: ")), int(input("Enter the y coordinate of the goal point: "))
-    # goal_orentation = int(input("Enter the orientation of robot at goal point ( multiple of 30 ): "))
 
     if canMove(initial_point) and canMove(goal_point):
         return initial_point, goal_point , inital_orentation, goal_orentation
@@ -292,8 +294,7 @@ def a_star(initial, final, inital_orentation ):
                             open_list.put((new_node.total_cost, new_node))
 
 # Draw the path as arrows 
-def draw_arrow(path):
-                    
+def draw_arrow(path):        
     for i in range(len(path) - 1):
         start_node = path[i]
         end_node = path[i + 1]
@@ -314,5 +315,4 @@ if __name__ == "__main__":
 
     draw_arrow(shortest_path)
     # video_writer.release()
-    # print(f"can move : {canMove((4167,736))}")
     show_image()
