@@ -19,9 +19,14 @@
 ## Overview
 This project implements three path planning algorithms:
 
-✅ **Dijkstra's Algorithm** - Finds the shortest path between a start and goal node using uniform cost search.
-✅ **A* Algorithm** - An optimized version of Dijkstra’s algorithm that uses heuristics for faster convergence.
-✅ **Rapidly-exploring Random Tree (RRT) Algorithm** - Implemented separately in [this repository](https://github.com/KomK2/RRT.git), which is useful for high-dimensional and complex spaces.
+✅ **Dijkstra's Algorithm**  
+Finds the shortest path between a start and goal node using uniform cost search.
+
+✅ **A* Algorithm**  
+An optimized version of Dijkstra’s algorithm that uses heuristics for faster convergence.
+
+✅ **Rapidly-exploring Random Tree (RRT) Algorithm**  
+Implemented separately in [this repository](https://github.com/KomK2/RRT.git), which is useful for high-dimensional and complex spaces.
 
 Both Dijkstra and A* implementations account for obstacles and robot clearance and provide visualizations of node exploration and the optimal path.
 
